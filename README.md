@@ -1,8 +1,8 @@
-# Time-O-Lite
+# TIME-O-LITE
 
 A specialized timer application designed for film development in darkroom photography. Features agitation alerts, persistent settings, and a vintage-inspired interface perfect for darkroom work.
 
-![Time-O-Lite Screenshot](img/time-o-lite.png)
+![TIME-O-LITE Screenshot](img/time-o-lite.png)
 
 ## Features
 
@@ -132,4 +132,4 @@ This project is open source and available under the [MIT License](LICENSE).
 - Built with modern web technologies for reliability and cross-platform compatibility
 - Bolt.new for initial application and design inspiration
 - Claude Code for polish and feature enhancements
-- No affiliation with Time-O-Lite or any trademarked entities
+- No affiliation with TIME-O-LITE or any trademarked entities
