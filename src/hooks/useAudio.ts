@@ -1,6 +1,9 @@
 import { useCallback, useRef } from 'react';
 
 const GAIN_EPSILON = 0.001;
+const AGITATION_START_DELAY = 100;
+const COMPLETION_SECOND_DELAY = 200;
+const COMPLETION_THIRD_DELAY = 400;
 
 export interface AudioHook {
   playAgitationStart: () => void;
@@ -102,7 +105,7 @@ export const useAudio = (): AudioHook => {
     
     setTimeout(() => {
       createEnhancedSound(1000, 0.2, 0.3, 'sine');
-    }, 100);
+    }, AGITATION_START_DELAY);
   }, [createChordSound, createEnhancedSound]);
 
   const playAgitationEnd = useCallback(() => {
@@ -119,11 +122,11 @@ export const useAudio = (): AudioHook => {
     
     setTimeout(() => {
       createChordSound([523, 659, 784], 0.6, 0.25, 'sine');
-    }, 200);
+    }, COMPLETION_SECOND_DELAY);
     
     setTimeout(() => {
       createChordSound([523, 659, 784], 0.4, 0.15, 'sine');
-    }, 400);
+    }, COMPLETION_THIRD_DELAY);
   }, [createChordSound]);
 
   return {
