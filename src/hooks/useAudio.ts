@@ -4,6 +4,7 @@ const GAIN_EPSILON = 0.001;
 const AGITATION_START_DELAY = 100;
 const COMPLETION_SECOND_DELAY = 200;
 const COMPLETION_THIRD_DELAY = 400;
+const REPEAT_DELAY = 300;
 
 export interface AudioHook {
   playAgitationStart: () => void;
@@ -101,32 +102,47 @@ export const useAudio = (): AudioHook => {
   }, [createEnhancedSound]);
 
   const playAgitationStart = useCallback(() => {
-    createChordSound([800, 1000, 1200], 0.6, 0.4, 'triangle');
-    
-    setTimeout(() => {
-      createEnhancedSound(1000, 0.2, 0.3, 'sine');
-    }, AGITATION_START_DELAY);
+    // Play three times in a row
+    for (let i = 0; i < 3; i++) {
+      setTimeout(() => {
+        createChordSound([800, 1000, 1200], 0.6, 0.4, 'triangle');
+        
+        setTimeout(() => {
+          createEnhancedSound(1000, 0.2, 0.3, 'sine');
+        }, AGITATION_START_DELAY);
+      }, i * REPEAT_DELAY);
+    }
   }, [createChordSound, createEnhancedSound]);
 
   const playAgitationEnd = useCallback(() => {
-    createEnhancedSound(600, 0.4, 0.25, 'sine', {
-      attack: 0.05,
-      decay: 0.1,
-      sustain: 0.7,
-      release: 0.25
-    });
+    // Play three times in a row
+    for (let i = 0; i < 3; i++) {
+      setTimeout(() => {
+        createEnhancedSound(600, 0.4, 0.25, 'sine', {
+          attack: 0.05,
+          decay: 0.1,
+          sustain: 0.7,
+          release: 0.25
+        });
+      }, i * REPEAT_DELAY);
+    }
   }, [createEnhancedSound]);
 
   const playCompletion = useCallback(() => {
-    createChordSound([523, 659, 784], 0.8, 0.35, 'sine');
-    
-    setTimeout(() => {
-      createChordSound([523, 659, 784], 0.6, 0.25, 'sine');
-    }, COMPLETION_SECOND_DELAY);
-    
-    setTimeout(() => {
-      createChordSound([523, 659, 784], 0.4, 0.15, 'sine');
-    }, COMPLETION_THIRD_DELAY);
+    // Play three times in a row
+    for (let i = 0; i < 3; i++) {
+      setTimeout(() => {
+        createChordSound([523, 659, 784], 0.8, 0.35, 'sine');
+        
+        setTimeout(() => {
+          createChordSound([523, 659, 784], 0.6, 0.25, 'sine');
+        }, COMPLETION_SECOND_DELAY);
+        
+        setTimeout(() => {
+          createChordSound([523, 659, 784], 0.4, 0.15, 'sine');
+        }, COMPLETION_THIRD_DELAY);
+      }, i * REPEAT_DELAY * 2); // Longer delay for completion since it's a longer sequence
+    }
   }, [createChordSound]);
 
   return {
