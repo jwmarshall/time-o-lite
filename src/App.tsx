@@ -4,14 +4,19 @@ import { CircularTimer } from './components/CircularTimer';
 import { Controls } from './components/Controls';
 import { useTimer } from './hooks/useTimer';
 import { useLocalStorage } from './hooks/useLocalStorage';
+import { useAudio } from './hooks/useAudio';
 
 function App() {
   const [developmentTime, setDevelopmentTime] = useLocalStorage('developmentTime', 10);
   const [agitationInterval, setAgitationInterval] = useLocalStorage('agitationInterval', 30);
   const [agitationDuration, setAgitationDuration] = useLocalStorage('agitationDuration', 10);
+  const [audioInitialized, setAudioInitialized] = useLocalStorage('audioInitialized', false);
 
   // Wake Lock API to keep screen on during timer
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
+
+  // Enhanced audio system
+  const { playAgitationStart, playAgitationEnd, playCompletion, initializeAudio } = useAudio();
 
   const requestWakeLock = useCallback(async () => {
     try {
@@ -36,61 +41,30 @@ function App() {
     }
   }, []);
 
-  const playAlarmSound = useCallback(() => {
-    // Create audio context for cross-browser compatibility
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-
-    oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
-    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + 0.5);
-  }, []);
+  const handleAudioInitialization = useCallback(() => {
+    if (!audioInitialized) {
+      initializeAudio();
+      setAudioInitialized(true);
+    }
+  }, [audioInitialized, initializeAudio, setAudioInitialized]);
 
   const handleAgitate = useCallback(() => {
-    playAlarmSound();
-  }, [playAlarmSound]);
+    if (audioInitialized) {
+      playAgitationStart();
+    }
+  }, [playAgitationStart, audioInitialized]);
 
   const handleAgitateEnd = useCallback(() => {
-    // Play agitation end sound (lower frequency, shorter duration)
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-
-    oscillator.frequency.setValueAtTime(600, audioContext.currentTime);
-    gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
-
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + 0.3);
-  }, []);
+    if (audioInitialized) {
+      playAgitationEnd();
+    }
+  }, [playAgitationEnd, audioInitialized]);
 
   const handleComplete = useCallback(() => {
-    // Play completion sound (longer and different tone)
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-
-    oscillator.frequency.setValueAtTime(600, audioContext.currentTime);
-    oscillator.frequency.setValueAtTime(800, audioContext.currentTime + 0.5);
-    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1);
-
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + 1);
-  }, []);
+    if (audioInitialized) {
+      playCompletion();
+    }
+  }, [playCompletion, audioInitialized]);
 
   const {
     currentTime,
@@ -142,12 +116,14 @@ function App() {
           developmentTime={developmentTime}
           agitationInterval={agitationInterval}
           agitationDuration={agitationDuration}
+          audioInitialized={audioInitialized}
           onDevelopmentTimeChange={setDevelopmentTime}
           onAgitationIntervalChange={setAgitationInterval}
           onAgitationDurationChange={setAgitationDuration}
           onStart={start}
           onPause={pause}
           onReset={reset}
+          onAudioInitialize={handleAudioInitialization}
         />
 
         {/* Footer */}

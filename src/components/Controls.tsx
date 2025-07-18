@@ -1,5 +1,5 @@
 import React from 'react';
-import { Play, Pause, Square, RotateCcw } from 'lucide-react';
+import { Play, Pause, RotateCcw, Volume2 } from 'lucide-react';
 
 interface ControlsProps {
   isRunning: boolean;
@@ -7,12 +7,14 @@ interface ControlsProps {
   developmentTime: number;
   agitationInterval: number;
   agitationDuration: number;
+  audioInitialized: boolean;
   onDevelopmentTimeChange: (time: number) => void;
   onAgitationIntervalChange: (interval: number) => void;
   onAgitationDurationChange: (duration: number) => void;
   onStart: () => void;
   onPause: () => void;
   onReset: () => void;
+  onAudioInitialize: () => void;
 }
 
 export const Controls: React.FC<ControlsProps> = ({
@@ -21,12 +23,14 @@ export const Controls: React.FC<ControlsProps> = ({
   developmentTime,
   agitationInterval,
   agitationDuration,
+  audioInitialized,
   onDevelopmentTimeChange,
   onAgitationIntervalChange,
   onAgitationDurationChange,
   onStart,
   onPause,
-  onReset
+  onReset,
+  onAudioInitialize
 }) => {
   return (
     <div className="w-full max-w-md mx-auto space-y-6">
@@ -86,6 +90,22 @@ export const Controls: React.FC<ControlsProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Audio initialization notice */}
+      {!audioInitialized && (
+        <div className="text-center p-3 bg-yellow-900/20 border border-yellow-700/50 rounded-lg">
+          <p className="text-sm text-yellow-300 mb-2">
+            Enable audio for timer alerts (required for mobile Safari)
+          </p>
+          <button
+            onClick={onAudioInitialize}
+            className="inline-flex items-center px-3 py-1 bg-yellow-600 hover:bg-yellow-700 text-white text-sm rounded transition-colors duration-200"
+          >
+            <Volume2 size={14} className="mr-1" />
+            Enable Audio
+          </button>
+        </div>
+      )}
 
       {/* Control buttons */}
       <div className="flex justify-center space-x-4">
