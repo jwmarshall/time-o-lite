@@ -1,5 +1,7 @@
 import { useCallback, useRef } from 'react';
 
+const GAIN_EPSILON = 0.001;
+
 export interface AudioHook {
   playAgitationStart: () => void;
   playAgitationEnd: () => void;
@@ -74,10 +76,10 @@ export const useAudio = (): AudioHook => {
       gainNode.gain.linearRampToValueAtTime(volume, attackEnd);
       gainNode.gain.exponentialRampToValueAtTime(volume * sustain, decayEnd);
       gainNode.gain.setValueAtTime(volume * sustain, sustainEnd);
-      gainNode.gain.exponentialRampToValueAtTime(0.001, releaseEnd);
+      gainNode.gain.exponentialRampToValueAtTime(GAIN_EPSILON, releaseEnd);
     } else {
       gainNode.gain.setValueAtTime(volume, now);
-      gainNode.gain.exponentialRampToValueAtTime(0.001, now + duration);
+      gainNode.gain.exponentialRampToValueAtTime(GAIN_EPSILON, now + duration);
     }
 
     oscillator.start(now);
