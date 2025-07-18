@@ -1,10 +1,20 @@
 import { useCallback, useRef } from 'react';
 
+// Interface for cross-browser AudioContext support
+interface WindowWithWebkitAudioContext extends Window {
+  webkitAudioContext?: typeof AudioContext;
+}
+
 const GAIN_EPSILON = 0.001;
-const AGITATION_START_DELAY = 100;
-const COMPLETION_SECOND_DELAY = 200;
-const COMPLETION_THIRD_DELAY = 400;
-const REPEAT_DELAY = 300;
+const AGITATION_START_DELAY = 0.1; // Convert to seconds
+const COMPLETION_SECOND_DELAY = 0.2; // Convert to seconds
+const COMPLETION_THIRD_DELAY = 0.4; // Convert to seconds
+const REPEAT_DELAY = 0.3; // Convert to seconds
+
+// Validate GAIN_EPSILON to ensure it's never zero (required for exponentialRampToValueAtTime)
+if (GAIN_EPSILON <= 0) {
+  throw new Error('GAIN_EPSILON must be greater than 0 for exponentialRampToValueAtTime to work properly');
+}
 
 export interface AudioHook {
   playAgitationStart: () => void;
@@ -19,7 +29,7 @@ export const useAudio = (): AudioHook => {
 
   const getAudioContext = useCallback(() => {
     if (!audioContextRef.current) {
-      const AudioContextClass = window.AudioContext || (window as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      const AudioContextClass = window.AudioContext || (window as WindowWithWebkitAudioContext).webkitAudioContext;
       if (AudioContextClass) {
         audioContextRef.current = new AudioContextClass();
       } else {
@@ -43,6 +53,7 @@ export const useAudio = (): AudioHook => {
     frequency: number,
     duration: number,
     volume: number,
+    startTime: number,
     waveform: OscillatorType = 'sine',
     envelope?: { attack: number; decay: number; sustain: number; release: number }
   ) => {
@@ -67,7 +78,7 @@ export const useAudio = (): AudioHook => {
     filter.connect(gainNode);
     gainNode.connect(audioContext.destination);
 
-    const now = audioContext.currentTime;
+    const now = startTime;
     
     if (envelope) {
       const { attack, decay, sustain, release } = envelope;
@@ -94,56 +105,54 @@ export const useAudio = (): AudioHook => {
     frequencies: number[],
     duration: number,
     volume: number,
+    startTime: number,
     waveform: OscillatorType = 'sine'
   ) => {
     frequencies.forEach(freq => {
-      createEnhancedSound(freq, duration, volume / frequencies.length, waveform);
+      createEnhancedSound(freq, duration, volume / frequencies.length, startTime, waveform);
     });
   }, [createEnhancedSound]);
 
   const playAgitationStart = useCallback(() => {
-    // Play three times in a row
+    const audioContext = getAudioContext();
+    const now = audioContext.currentTime;
+    
+    // Play three times in a row using Web Audio API scheduling
     for (let i = 0; i < 3; i++) {
-      setTimeout(() => {
-        createChordSound([800, 1000, 1200], 0.6, 0.4, 'triangle');
-        
-        setTimeout(() => {
-          createEnhancedSound(1000, 0.2, 0.3, 'sine');
-        }, AGITATION_START_DELAY);
-      }, i * REPEAT_DELAY);
+      const repeatStartTime = now + (i * REPEAT_DELAY);
+      createChordSound([800, 1000, 1200], 0.6, 0.4, repeatStartTime, 'triangle');
+      createEnhancedSound(1000, 0.2, 0.3, repeatStartTime + AGITATION_START_DELAY, 'sine');
     }
-  }, [createChordSound, createEnhancedSound]);
+  }, [createChordSound, createEnhancedSound, getAudioContext]);
 
   const playAgitationEnd = useCallback(() => {
-    // Play three times in a row
+    const audioContext = getAudioContext();
+    const now = audioContext.currentTime;
+    
+    // Play three times in a row using Web Audio API scheduling
     for (let i = 0; i < 3; i++) {
-      setTimeout(() => {
-        createEnhancedSound(600, 0.4, 0.25, 'sine', {
-          attack: 0.05,
-          decay: 0.1,
-          sustain: 0.7,
-          release: 0.25
-        });
-      }, i * REPEAT_DELAY);
+      const repeatStartTime = now + (i * REPEAT_DELAY);
+      createEnhancedSound(600, 0.4, 0.25, repeatStartTime, 'sine', {
+        attack: 0.05,
+        decay: 0.1,
+        sustain: 0.7,
+        release: 0.25
+      });
     }
-  }, [createEnhancedSound]);
+  }, [createEnhancedSound, getAudioContext]);
 
   const playCompletion = useCallback(() => {
-    // Play three times in a row
+    const audioContext = getAudioContext();
+    const now = audioContext.currentTime;
+    
+    // Play three times in a row using Web Audio API scheduling
     for (let i = 0; i < 3; i++) {
-      setTimeout(() => {
-        createChordSound([523, 659, 784], 0.8, 0.35, 'sine');
-        
-        setTimeout(() => {
-          createChordSound([523, 659, 784], 0.6, 0.25, 'sine');
-        }, COMPLETION_SECOND_DELAY);
-        
-        setTimeout(() => {
-          createChordSound([523, 659, 784], 0.4, 0.15, 'sine');
-        }, COMPLETION_THIRD_DELAY);
-      }, i * REPEAT_DELAY * 2); // Longer delay for completion since it's a longer sequence
+      const repeatStartTime = now + (i * REPEAT_DELAY * 2); // Longer delay for completion since it's a longer sequence
+      createChordSound([523, 659, 784], 0.8, 0.35, repeatStartTime, 'sine');
+      createChordSound([523, 659, 784], 0.6, 0.25, repeatStartTime + COMPLETION_SECOND_DELAY, 'sine');
+      createChordSound([523, 659, 784], 0.4, 0.15, repeatStartTime + COMPLETION_THIRD_DELAY, 'sine');
     }
-  }, [createChordSound]);
+  }, [createChordSound, getAudioContext]);
 
   return {
     playAgitationStart,
