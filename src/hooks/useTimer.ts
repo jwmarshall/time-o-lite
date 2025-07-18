@@ -3,7 +3,9 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 export const useTimer = (
   totalMinutes: number,
   agitationInterval: number,
+  agitationDuration: number,
   onAgitate: () => void,
+  onAgitateEnd: () => void,
   onComplete: () => void
 ) => {
   const [currentTime, setCurrentTime] = useState(totalMinutes * 60);
@@ -57,10 +59,11 @@ export const useTimer = (
             onAgitate();
             setIsAgitating(true);
             
-            // Clear agitation state after 2 seconds
+            // Clear agitation state after specified duration
             agitationTimeoutRef.current = setTimeout(() => {
               setIsAgitating(false);
-            }, 2000);
+              onAgitateEnd();
+            }, agitationDuration * 1000);
           }
           
           // Check for completion
@@ -81,7 +84,7 @@ export const useTimer = (
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [isRunning, currentTime, totalMinutes, agitationInterval, lastAgitationTime, onAgitate, onComplete]);
+  }, [isRunning, currentTime, totalMinutes, agitationInterval, agitationDuration, lastAgitationTime, onAgitate, onAgitateEnd, onComplete]);
 
   // Cleanup on unmount
   useEffect(() => {
